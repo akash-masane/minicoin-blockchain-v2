@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>MiniCoin — Blockchain Explorer v2</title>
+  <meta name="description" content="MiniCoin Blockchain v2 — Mining, Staking, Leaderboard, Price Charts and more."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-coin">M</div>
+      <div>
+        <div class="logo-title">MiniCoin <span class="version-badge">v2.0</span></div>
+        <div class="logo-sub">Blockchain Network</div>
+      </div>
+    </div>
+    <!-- Price Ticker -->
+    <div class="price-ticker" id="priceTicker">
+      <div class="ticker-price" id="tickerPrice">$—</div>
+      <div class="ticker-change" id="tickerChange">—%</div>
+      <div class="ticker-label">MNC/USD</div>
+    </div>
+    <div class="header-stats">
+      <div class="hstat"><span class="hstat-val" id="hBlocks">—</span><span class="hstat-lbl">Blocks</span></div>
+      <div class="hstat"><span class="hstat-val" id="hTxs">—</span><span class="hstat-lbl">Txs</span></div>
+      <div class="hstat"><span class="hstat-val" id="hMcap">—</span><span class="hstat-lbl">Market Cap</span></div>
+      <div class="hstat">
+        <span class="hstat-val" id="hValid" style="font-size:0.9rem">—</span>
+        <span class="hstat-lbl">Chain</span>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- ── MAIN ── -->
+<main class="main">
+  <nav class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+    <button class="tab" onclick="switchTab('wallets',this)">👛 Wallets</button>
+    <button class="tab" onclick="switchTab('send',this)">💸 Send</button>
+    <button class="tab" onclick="switchTab('mine',this)">⛏️ Mine</button>
+    <button class="tab" onclick="switchTab('staking',this)">💎 Staking</button>
+    <button class="tab" onclick="switchTab('leaderboard',this)">🏆 Leaderboard</button>
+    <button class="tab" onclick="switchTab('explorer',this)">🔍 Explorer</button>
+  </nav>
+  <!-- ─────── DASHBOARD ─────── -->
+  <section class="tab-content active" id="tab-dashboard">
+    <!-- Market Cards -->
+    <div class="market-grid">
+      <div class="market-card">
+        <div class="mc-label">MNC Price</div>
+        <div class="mc-val" id="mcPrice">$—</div>
+        <div class="mc-sub" id="mcChange">—</div>
+      </div>
+      <div class="market-card">
+        <div class="mc-label">Market Cap</div>
+        <div class="mc-val" id="mcap">$—</div>
+        <div class="mc-sub" id="mcSupply">—</div>
+      </div>
+      <div class="market-card">
+        <div class="mc-label">24h High</div>
+        <div class="mc-val green" id="mcHigh">$—</div>
+        <div class="mc-sub" id="mcLow">Low: $—</div>
+      </div>
+      <div class="market-card">
+        <div class="mc-label">Total Staked</div>
+        <div class="mc-val gold" id="mcStaked">— MNC</div>
+        <div class="mc-sub">12% APY</div>
+      </div>
+    </div>
+    <!-- Price Chart -->
+    <div class="card chart-card" style="margin-bottom:1.5rem">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">MNC/USD Price Chart</div>
+          <div class="chart-sub">72h historical data</div>
+        </div>
+        <div class="chart-btns">
+          <button class="chart-btn active" onclick="setChartPeriod(24,this)">24h</button>
+          <button class="chart-btn" onclick="setChartPeriod(48,this)">48h</button>
+          <button class="chart-btn" onclick="setChartPeriod(72,this)">72h</button>
+        </div>
+      </div>
+      <canvas id="priceChart" class="price-canvas"></canvas>
+      <div class="chart-tooltip hidden" id="chartTooltip"></div>
+    </div>
+    <!-- Stats Grid -->
+    <div class="section-title">Network Overview</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">⛓️</div><div class="stat-val" id="statBlocks">—</div><div class="stat-lbl">Blocks</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val" id="statPending">—</div><div class="stat-lbl">Pending Txs</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val" id="statSupply">—</div><div class="stat-lbl">MNC Supply</div></div>
+      <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-val" id="statDiff">—</div><div class="stat-lbl">Difficulty</div></div>
+      <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="statReward">—</div><div class="stat-lbl">Block Reward</div></div>
+      <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-val" id="statAvgTime">—s</div><div class="stat-lbl">Avg Block Time</div></div>
+    </div>
+    <!-- Pending Txs -->
+    <div class="section-title" style="margin-top:2rem">⏳ Pending Transactions</div>
+    <div class="card"><div id="pendingList" class="tx-list"><div class="empty-msg">All confirmed ✅</div></div></div>
+    <!-- Recent Blocks -->
+    <div class="section-title" style="margin-top:1.5rem">🕐 Recent Blocks</div>
+    <div id="recentBlocks" class="blocks-list"></div>
+  </section>
+  <!-- ─────── WALLETS ─────── -->
+  <section class="tab-content" id="tab-wallets">
+    <div class="section-title">Wallet Manager</div>
+    <div class="card form-card" style="margin-bottom:1.5rem">
+      <h3 class="form-title">➕ Create New Wallet</h3>
+      <div class="form-row">
+        <input type="text" id="walletName" class="input" placeholder="Wallet name (e.g. Dave)"/>
+        <button class="btn btn-primary" onclick="createWallet()">Create</button>
+      </div>
+      <div id="walletCreateMsg" class="msg"></div>
+    </div>
+    <div class="section-title">All Wallets <span id="walletCount" class="badge"></span></div>
+    <div id="walletList" class="wallet-grid"></div>
+  </section>
+  <!-- ─────── SEND ─────── -->
+  <section class="tab-content" id="tab-send">
+    <div class="section-title">Send MiniCoins</div>
+    <div class="card form-card">
+      <div class="form-group">
+        <label class="label">From</label>
+        <select id="sendFrom" class="input select" onchange="updateSenderBal()"></select>
+        <div class="balance-tag">Available: <span id="senderBalance">—</span> MNC</div>
+      </div>
+      <div class="swap-icon">⇅</div>
+      <div class="form-group">
+        <label class="label">To</label>
+        <select id="sendTo" class="input select"></select>
+      </div>
+      <div class="form-group">
+        <label class="label">Amount (MNC)</label>
+        <div class="amount-row">
+          <input type="number" id="sendAmount" class="input" placeholder="0.00" min="0.01" step="0.01"/>
+          <button class="btn-max" onclick="setMaxAmount()">MAX</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="sendTransaction()">💸 Send Transaction</button>
+      <div id="sendMsg" class="msg"></div>
+      <div class="info-box">
+        ℹ️ Transactions are pending until a miner mines a new block. Go to <strong>Mine</strong> to confirm.
+      </div>
+    </div>
+  </section>
+  <!-- ─────── MINE ─────── -->
+  <section class="tab-content" id="tab-mine">
+    <div class="section-title">Mine a Block</div>
+    <div class="card form-card">
+      <div class="form-group">
+        <label class="label">Miner Wallet</label>
+        <select id="minerWallet" class="input select" onchange="updateMinerBal()"></select>
+        <div class="balance-tag">Balance: <span id="minerBalance">—</span> MNC</div>
+      </div>
+      <div class="mine-info-grid">
+        <div class="mine-info-item"><span class="mine-info-icon">🎯</span><div><div class="mine-info-val" id="mDiff">—</div><div class="mine-info-lbl">Difficulty</div></div></div>
+        <div class="mine-info-item"><span class="mine-info-icon">🏅</span><div><div class="mine-info-val" id="mReward">—</div><div class="mine-info-lbl">Reward (MNC)</div></div></div>
+        <div class="mine-info-item"><span class="mine-info-icon">⏳</span><div><div class="mine-info-val" id="mPending">—</div><div class="mine-info-lbl">Pending Txs</div></div></div>
+        <div class="mine-info-item"><span class="mine-info-icon">⏱️</span><div><div class="mine-info-val" id="mAvgTime">—s</div><div class="mine-info-lbl">Avg Block Time</div></div></div>
+      </div>
+      <button class="btn btn-mine btn-full" id="mineBtn" onclick="mineBlock()">⛏️ Start Mining</button>
+      <div id="mineMsg" class="msg"></div>
+      <div id="miningAnimation" class="mining-anim hidden">
+        <div class="mining-spinner"></div>
+        <div class="mining-text">Solving Proof of Work...</div>
+        <div class="mining-subtext">Finding hash with <span id="diffZeros">4</span> leading zeros</div>
+        <div class="hash-preview" id="hashPreview">Calculating...</div>
+      </div>
+      <div id="minedResult" class="mined-result hidden"></div>
+    </div>
+  </section>
+  <!-- ─────── STAKING ─────── -->
+  <section class="tab-content" id="tab-staking">
+    <div class="section-title">Staking — Earn Passive Income</div>
+    <!-- APY Info Banner -->
+    <div class="apy-banner">
+      <div class="apy-item"><span class="apy-icon">💎</span><div><div class="apy-val">12%</div><div class="apy-lbl">Annual APY</div></div></div>
+      <div class="apy-item"><span class="apy-icon">🔒</span><div><div class="apy-val" id="stakeNetTotal">— MNC</div><div class="apy-lbl">Total Staked</div></div></div>
+      <div class="apy-item"><span class="apy-icon">🌐</span><div><div class="apy-val" id="stakeStakers">—</div><div class="apy-lbl">Stakers</div></div></div>
+    </div>
+    <!-- Stake Form -->
+    <div class="card form-card" style="margin-bottom:1.5rem">
+      <h3 class="form-title">Stake Your MNC</h3>
+      <div class="form-group">
+        <label class="label">Wallet</label>
+        <select id="stakeWallet" class="input select" onchange="loadStakingInfo()"></select>
+        <div class="balance-tag">Available: <span id="stakeAvail">—</span> MNC</div>
+      </div>
+      <div class="form-group">
+        <label class="label">Amount to Stake (min 1 MNC)</label>
+        <div class="amount-row">
+          <input type="number" id="stakeAmount" class="input" placeholder="0.00" min="1" step="1"/>
+          <button class="btn-max" onclick="setStakeMax()">MAX</button>
+        </div>
+      </div>
+      <div class="apy-preview" id="apyPreview"></div>
+      <div class="stake-btn-row">
+        <button class="btn btn-primary" onclick="stakeCoins()">🔒 Stake</button>
+        <button class="btn btn-outline" id="claimBtn" onclick="claimRewards()" disabled>💰 Claim Rewards</button>
+        <button class="btn btn-danger" id="unstakeBtn" onclick="unstakeCoins()" disabled>🔓 Unstake All</button>
+      </div>
+      <div id="stakeMsg" class="msg"></div>
+    </div>
+    <!-- Current Stake Info -->
+    <div class="card" id="stakeInfoCard" style="display:none">
+      <h3 class="form-title">Your Active Stake</h3>
+      <div class="stake-stats-grid">
+        <div class="stake-stat"><div class="stake-stat-val gold" id="ssStaked">—</div><div class="stake-stat-lbl">Staked (MNC)</div></div>
+        <div class="stake-stat"><div class="stake-stat-val green" id="ssPending">—</div><div class="stake-stat-lbl">Pending Rewards</div></div>
+        <div class="stake-stat"><div class="stake-stat-val" id="ssEarned">—</div><div class="stake-stat-lbl">Total Earned</div></div>
+        <div class="stake-stat"><div class="stake-stat-val" id="ssApy">12%</div><div class="stake-stat-lbl">APY</div></div>
+      </div>
+      <div class="reward-ticker" id="rewardTicker">+0.000000 MNC earned</div>
+    </div>
+    <!-- All stakers -->
+    <div class="section-title" style="margin-top:1.5rem">All Stakers</div>
+    <div id="allStakers" class="stakers-list"></div>
+  </section>
+  <!-- ─────── LEADERBOARD ─────── -->
+  <section class="tab-content" id="tab-leaderboard">
+    <div class="section-title">Wealth Leaderboard</div>
+    <div class="card" style="overflow:hidden">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Wallet</th>
+            <th>Balance</th>
+            <th>Staked</th>
+            <th>Total Worth</th>
+            <th>Txs</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+    </div>
+  </section>
+  <!-- ─────── EXPLORER ─────── -->
+  <section class="tab-content" id="tab-explorer">
+    <div class="section-title">Blockchain Explorer</div>
+    <!-- Search -->
+    <div class="search-bar-wrap">
+      <input type="text" id="searchInput" class="input search-input" placeholder="Search by block #, hash, TX ID, or wallet address..."/>
+      <button class="btn btn-primary" onclick="searchChain()">Search</button>
+    </div>
+    <!-- Search results -->
+    <div id="searchResults" class="search-results hidden"></div>
+    <!-- Validity -->
+    <div id="chainValidityBanner" class="validity-banner"></div>
+    <div id="blockExplorer" class="explorer-blocks"></div>
+  </section>
+</main>
+<!-- ── WALLET HISTORY MODAL ── -->
+<div id="walletModal" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeWalletModal()">✕</button>
+    <h3 class="modal-title">Wallet Details</h3>
+    <div id="modalAddr" class="modal-addr"></div>
+    <div class="modal-balance-row">
+      <div><div class="modal-bal-val" id="modalBal">—</div><div class="modal-bal-lbl">Total Balance</div></div>
+      <div><div class="modal-bal-val gold" id="modalAvail">—</div><div class="modal-bal-lbl">Available</div></div>
+    </div>
+    <div class="modal-section-title">Transaction History</div>
+    <div id="modalTxList" class="modal-tx-list"></div>
+  </div>
+</div>
+<!-- ── TOAST ── -->
+<div id="toast" class="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
